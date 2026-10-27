@@ -1,2 +1,4 @@
 *.zip
 use_*/
+download-account.json
+run-monitoring-private.ps1
