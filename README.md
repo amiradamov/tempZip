@@ -28,6 +28,6 @@ For a manual login:
 
 Both methods download one bundle containing all 34 ZIPs from Contabo, verify the filenames and selected enrollment, refresh the existing `Documents\tempZip` Git clone, place all ZIPs in that folder, and install only the selected computer. No separate download code, Git pull, ZIP copy, or extraction is required.
 
-The updater refuses to delete a redirected or non-repository `tempZip` folder. Download and installation errors stop the script. The original folder is replaced only after the bundle passes validation.
+The updater refuses to replace a redirected `tempZip` path. If an earlier failed deletion left a folder without `.git`, it moves that folder to a uniquely named `Documents\tempZip-recovery-*` backup before cloning. Review that backup before removing it. Download and installation errors stop the script. The original folder is replaced only after the bundle passes validation.
 
 The `monitoring-download` account is restricted to read-only SFTP inside its download folder. It cannot open a shell or forward ports. Passwords and ZIPs must stay out of Git; downloaded ZIPs and extracted enrollment folders are ignored.

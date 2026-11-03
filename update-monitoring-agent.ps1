@@ -95,16 +95,23 @@ try {
 
     if (Test-Path -LiteralPath $repo) {
         $existing = Get-Item -LiteralPath $repo -Force
-        if (($existing.Attributes -band [IO.FileAttributes]::ReparsePoint) -or
-            -not (Test-Path -LiteralPath (Join-Path $repo '.git'))) {
-            throw "Refusing to remove this non-repository or redirected path: $repo"
+        if (-not $existing.PSIsContainer -or
+            ($existing.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            throw "Refusing to replace this file or redirected path: $repo"
         }
         if ([IO.Directory]::GetParent($repo).FullName.TrimEnd('\') -ne
             [IO.Path]::GetFullPath($documents).TrimEnd('\')) {
             throw "Refusing to remove a path outside Documents: $repo"
         }
         Set-Location -LiteralPath $documents
-        Remove-Item -LiteralPath $repo -Recurse -Force
+        if (Test-Path -LiteralPath (Join-Path $repo '.git') -PathType Container) {
+            Remove-Item -LiteralPath $repo -Recurse -Force
+        } else {
+            $backup = Join-Path $documents ('tempZip-recovery-' + [guid]::NewGuid().ToString('N'))
+            if (Test-Path -LiteralPath $backup) { throw "Recovery folder already exists: $backup" }
+            Move-Item -LiteralPath $repo -Destination $backup -ErrorAction Stop
+            Write-Host "Saved the incomplete tempZip folder at $backup"
+        }
     }
 
     & git.exe clone --depth 1 'https://github.com/amiradamov/tempZip.git' $repo
