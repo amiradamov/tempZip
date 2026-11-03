@@ -11,13 +11,16 @@ The automatic transfer downloads the official PuTTY PSCP 0.85 executable, checks
 For a manual login:
 
 1. Install Git for Windows and enable the Windows OpenSSH Client (normally already installed).
-2. Open PowerShell as Administrator. Run this block, changing `use_30` to the assigned computer name (`use_1` through `use_34`):
+2. Open PowerShell as Administrator. Run this block, changing `use_30` to the assigned computer name (`use_1` through `use_34`). Run the complete block even if PowerShell opens inside `Documents\tempZip`:
 
    ```powershell
+   $ErrorActionPreference = 'Stop'
    $Name = 'use_30'
-   $Updater = Join-Path (Join-Path $env:USERPROFILE 'Downloads') 'update-monitoring-agent.ps1'
-   New-Item -ItemType Directory -Path (Split-Path $Updater) -Force | Out-Null
+   $Downloads = Join-Path ([Environment]::GetFolderPath('UserProfile')) 'Downloads'
+   New-Item -ItemType Directory -Path $Downloads -Force | Out-Null
+   $Updater = Join-Path $Downloads 'update-monitoring-agent.ps1'
    Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/amiradamov/tempZip/main/update-monitoring-agent.ps1' -OutFile $Updater
+   Set-Location -LiteralPath $Downloads
    powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Updater -Name $Name
    ```
 

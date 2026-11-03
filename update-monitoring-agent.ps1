@@ -15,6 +15,14 @@ $repo = [IO.Path]::GetFullPath((Join-Path $documents 'tempZip')).TrimEnd('\')
 $downloads = Join-Path $env:USERPROFILE 'Downloads'
 $bundle = Join-Path $downloads 'monitoring-enrollments.zip'
 $staging = Join-Path $downloads ('monitoring-enrollments-' + [guid]::NewGuid().ToString('N'))
+$location = Get-Location
+if ($location.Provider.Name -eq 'FileSystem') {
+    $currentDirectory = [IO.Path]::GetFullPath($location.ProviderPath).TrimEnd('\')
+    if ($currentDirectory.Equals($repo, [StringComparison]::OrdinalIgnoreCase) -or
+        $currentDirectory.StartsWith($repo + '\', [StringComparison]::OrdinalIgnoreCase)) {
+        throw "This PowerShell window is inside $repo. Change to Downloads in that window, then rerun the updater."
+    }
+}
 
 if (-not $downloadPassword -and -not (Get-Command sftp.exe -ErrorAction SilentlyContinue)) {
     throw 'The Windows OpenSSH Client is required. Install it under Windows Optional Features.'
